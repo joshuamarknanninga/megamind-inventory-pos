@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+      /* ===== Basic Settings ===== */
+      "target": "ES2020",                     // Use modern JS features
+      "module": "ESNext",                     // Use ES modules (import/export)
+      "moduleResolution": "Node",            // Resolve Node-style imports
+      "rootDir": "src",                       // Your TypeScript source folder
+      "outDir": "dist",                       // Where compiled JS goes
+      "esModuleInterop": true,               // Allow default imports from CJS modules
+      "allowSyntheticDefaultImports": true,  // Helps with import compatibility
+      "resolveJsonModule": true,             // Import .json files if needed
+      "strict": true,                        // Enable all strict type checks
+      "skipLibCheck": true,                  // Speeds up compilation
+      "forceConsistentCasingInFileNames": true,
+  
+      /* ===== Node / Path Support ===== */
+      "types": ["node"],                     // Include Node.js types
+      "baseUrl": "./",                       // Enable absolute imports
+      "paths": {
+        "@/*": ["src/*"]                     // Example: import { foo } from "@/utils/foo";
+      },
+  
+      /* ===== Emit Options ===== */
+      "noEmitOnError": false,                // Still build even with type errors (optional)
+      "sourceMap": true,                     // Useful for debugging with stack traces
+      "removeComments": true                 // Clean compiled output
+    },
+  
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  }
+  
