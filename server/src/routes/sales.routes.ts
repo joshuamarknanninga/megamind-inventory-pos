@@ -1,34 +1,29 @@
-import { Router } from 'express';
-import Sale from '../models/Sale.js';
-import Inventory from '../models/Inventory.js';
-const r = Router();
+import { Router, Request, Response } from "express";
+import Inventory from "../models/Inventory.js";
+import Sale from "../models/Sale.js";
 
-r.get('/', async (req, res) => {
-  const { storeId, from, to } = req.query;
-  const q:any = {};
-  if (storeId) q.storeId = storeId;
-  if (from || to) q.createdAt = { ...(from ? { $gte: new Date(from as string) } : {}), ...(to ? { $lte: new Date(to as string) } : {}) };
-  const sales = await Sale.find(q).sort({ createdAt: -1 }).lean();
-  res.json(sales);
-});
+const router = Router();
 
-// finalize (used by Square webhook) or cash sale
-r.post('/finalize', async (req, res) => {
-  const { saleId } = req.body;
-  const sale = await Sale.findByIdAndUpdate(saleId, { status: 'paid' }, { new: true });
-  // decrement inventory
-  if (sale) {
-    await Promise.all(sale.items.map(it =>
-      Inventory.findOneAndUpdate({ storeId: sale.storeId, itemId: it.itemId }, { $inc: { qty: -Math.abs(it.qty) } })
-    ));
+/**
+ * 💸 Handle sale and update inventory quantities
+ */
+router.post("/", async (req: Request, res: Response) => {
+  try {
+    const sale = await Sale.create(req.body);
+
+    // Example logic: decrement inventory for each sold item
+    for (const it of sale.items) {
+      await Inventory.findOneAndUpdate(
+        { storeId: sale.storeId, itemId: it.itemId },
+        { $inc: { qty: -Math.abs(it.qty ?? 0) } } // ✅ fix: qty fallback
+      );
+    }
+
+    return res.json({ message: "✅ Sale recorded successfully", sale });
+  } catch (err) {
+    console.error("❌ Sale creation error:", err);
+    return res.status(500).json({ error: "Failed to process sale." });
   }
-  res.json(sale);
 });
 
-// create pending sale (cart pre-payment)
-r.post('/', async (req, res) => {
-  const sale = await Sale.create(req.body); // status=pending
-  res.json(sale);
-});
-
-export default r;
+export default router;

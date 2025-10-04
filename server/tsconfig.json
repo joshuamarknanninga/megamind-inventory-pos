@@ -3,8 +3,8 @@
       /* ===== Basic Settings ===== */
       "target": "ES2020",                     // Use modern JS features
       "module": "ESNext",                     // Use ES modules (import/export)
-      "moduleResolution": "Node",            // Resolve Node-style imports
-      "rootDir": "src",                       // Your TypeScript source folder
+      "moduleResolution": "node",            // Resolve Node-style imports
+      "rootDir": "./src",                       // Your TypeScript source folder
       "outDir": "dist",                       // Where compiled JS goes
       "esModuleInterop": true,               // Allow default imports from CJS modules
       "allowSyntheticDefaultImports": true,  // Helps with import compatibility

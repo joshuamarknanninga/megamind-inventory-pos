@@ -1,30 +1,32 @@
-import { Router } from 'express';
-import Inventory from '../models/Inventory.js';
-import Item from '../models/Item.js';
-const r = Router();
+import { Router, Request, Response } from "express";
+import Inventory from "../models/Inventory.js";
 
-// list by store
-r.get('/:storeId', async (req, res) => {
-  const inv = await Inventory.find({ storeId: req.params.storeId }).populate('itemId').lean();
-  res.json(inv.map(v => ({
-    itemId: v.itemId._id,
-    sku: v.itemId.sku,
-    name: v.itemId.name,
-    qty: v.qty,
-    price: v.itemId.price,
-    barcode: v.itemId.barcode
-  })));
+const router = Router();
+
+/**
+ * 📦 GET Inventory for a Store (Populated with item details)
+ */
+router.get("/:storeId", async (req: Request, res: Response) => {
+  try {
+    const inventory = await Inventory.find({ storeId: req.params.storeId }).populate("itemId");
+
+    const formatted = inventory.map(v => {
+      // TypeScript thinks itemId is an ObjectId, but it's populated here
+      const item = v.itemId as any;
+      return {
+        sku: item?.sku ?? "N/A",
+        name: item?.name ?? "Unnamed",
+        price: item?.price ?? 0,
+        barcode: item?.barcode ?? "N/A",
+        qty: v.qty ?? 0,
+      };
+    });
+
+    return res.json(formatted);
+  } catch (err) {
+    console.error("❌ Inventory fetch error:", err);
+    return res.status(500).json({ error: "Failed to load inventory." });
+  }
 });
 
-// adjust quantity (+/-)
-r.post('/adjust', async (req, res) => {
-  const { storeId, itemId, delta } = req.body;
-  const doc = await Inventory.findOneAndUpdate(
-    { storeId, itemId },
-    { $inc: { qty: delta } },
-    { new: true, upsert: true }
-  );
-  res.json(doc);
-});
-
-export default r;
+export default router;

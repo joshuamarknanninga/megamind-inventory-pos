@@ -1,9 +1,19 @@
-import { ZodSchema } from 'zod';
-export const validate = <T>(schema: ZodSchema<T>) => (req, res, next) => {
-  try {
-    req.body = schema.parse(req.body);
-    next();
-  } catch (e:any) {
-    res.status(400).json({ error: e.errors ?? e.message });
-  }
-};
+import { Request, Response, NextFunction } from "express";
+import { ZodSchema } from "zod";
+
+/**
+ * ✅ Zod validation middleware
+ */
+export const validate =
+  <T>(schema: ZodSchema<T>) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    try {
+      schema.parse(req.body);
+      next();
+    } catch (err: any) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: err.errors ?? err.message,
+      });
+    }
+  };

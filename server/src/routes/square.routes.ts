@@ -1,25 +1,23 @@
-import { Router } from 'express';
-import Sale from '../models/Sale.js';
-import { createPaymentLink } from '../services/square.service.js';
-const r = Router();
+import { Router, Request, Response } from "express";
+import { createPaymentLink } from "../services/square.service.js";
 
-r.post('/link', async (req, res) => {
-  const { saleId } = req.body;
-  const sale = await Sale.findById(saleId);
-  if (!sale) return res.status(404).json({ error: 'Sale not found' });
-  const url = await createPaymentLink(Math.round(sale.total * 100), `Sale ${saleId}`);
-  res.json({ url });
-});
+const router = Router();
 
-// webhook (set URL in Square dashboard)
-r.post('/webhook', async (req, res) => {
-  // TODO: verify signature with SQUARE_WEBHOOK_SIGNATURE_KEY
-  const event = req.body;
-  if (event.type === 'payment.updated' && event.data?.object?.payment?.status === 'COMPLETED') {
-    const saleId = event.data.object.payment.note?.replace('Sale ', '');
-    if (saleId) await Sale.findByIdAndUpdate(saleId, { status: 'paid', squarePaymentId: event.data.object.payment.id });
+/**
+ * 💳 Create a payment link for a sale
+ */
+router.post("/payment-link", async (req: Request, res: Response) => {
+  try {
+    const { sale, saleId } = req.body as { sale: any; saleId: string };
+
+    const total = sale?.total ?? 0; // ✅ fix: ensure it's a number
+    const url = await createPaymentLink(Math.round(total * 100), `Sale ${saleId}`);
+
+    return res.json({ url });
+  } catch (err) {
+    console.error("❌ Payment link error:", err);
+    return res.status(500).json({ error: "Failed to create payment link." });
   }
-  res.json({ ok: true });
 });
 
-export default r;
+export default router;

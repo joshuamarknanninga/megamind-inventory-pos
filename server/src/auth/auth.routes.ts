@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Employee from "../models/Employee.js";
@@ -6,12 +6,16 @@ import Employee from "../models/Employee.js";
 const router = Router();
 
 /**
- * 🧑‍💻 REGISTER (optional)
- * Only admins should call this — or use a seeding script to create initial admin.
+ * 🧑‍💻 REGISTER — Admin or seed script
  */
-router.post("/register", async (req, res) => {
+router.post("/register", async (req: Request, res: Response) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role } = req.body as {
+      name?: string;
+      email?: string;
+      password?: string;
+      role?: string;
+    };
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: "Name, email, and password are required." });
@@ -23,22 +27,37 @@ router.post("/register", async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const employee = await Employee.create({ name, email, passwordHash, role: role || "cashier" });
+    const employee = await Employee.create({
+      name,
+      email,
+      passwordHash,
+      role: role || "cashier",
+    });
 
-    res.status(201).json({ message: "Employee registered successfully", employee });
+    return res.status(201).json({
+      message: "✅ Employee registered successfully",
+      employee: {
+        id: employee._id,
+        name: employee.name,
+        email: employee.email,
+        role: employee.role,
+      },
+    });
   } catch (err) {
     console.error("❌ Registration error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
 /**
  * 🔐 LOGIN
- * Validates credentials and returns a signed JWT.
  */
-router.post("/login", async (req, res) => {
+router.post("/login", async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body as {
+      email?: string;
+      password?: string;
+    };
 
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required." });
@@ -49,9 +68,18 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials." });
     }
 
-    const validPassword = await bcrypt.compare(password, employee.passwordHash);
+    // ✅ Ensure passwordHash is defined before comparing
+    const passwordHash: string = employee.passwordHash ?? "";
+    const validPassword = await bcrypt.compare(password, passwordHash);
     if (!validPassword) {
       return res.status(401).json({ error: "Invalid credentials." });
+    }
+
+    // ✅ Ensure JWT secret is defined
+    const jwtSecret = process.env.JWT_SECRET ?? "";
+    if (!jwtSecret) {
+      console.error("❌ JWT_SECRET is missing from environment variables.");
+      return res.status(500).json({ error: "Server misconfiguration." });
     }
 
     const token = jwt.sign(
@@ -60,12 +88,12 @@ router.post("/login", async (req, res) => {
         email: employee.email,
         role: employee.role,
       },
-      process.env.JWT_SECRET as string,
+      jwtSecret,
       { expiresIn: "8h" }
     );
 
-    res.json({
-      message: "Login successful",
+    return res.json({
+      message: "✅ Login successful",
       token,
       user: {
         id: employee._id,
@@ -76,22 +104,32 @@ router.post("/login", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Login error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
 /**
- * 🔄 VERIFY TOKEN (Optional — for frontend auth persistence)
+ * 🔄 VERIFY TOKEN
  */
-router.get("/verify", async (req, res) => {
-  const token = req.headers["authorization"]?.split(" ")[1];
-  if (!token) return res.status(401).json({ valid: false });
+router.get("/verify", async (req: Request, res: Response) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ valid: false, error: "No token provided" });
+  }
+
+  const jwtSecret = process.env.JWT_SECRET ?? "";
+  if (!jwtSecret) {
+    console.error("❌ JWT_SECRET is missing from environment variables.");
+    return res.status(500).json({ error: "Server misconfiguration." });
+  }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-    res.json({ valid: true, user: decoded });
-  } catch {
-    res.status(401).json({ valid: false });
+    const decoded = jwt.verify(token, jwtSecret);
+    return res.json({ valid: true, user: decoded });
+  } catch (err) {
+    console.warn("⚠️ Invalid token:", err);
+    return res.status(401).json({ valid: false });
   }
 });
 
