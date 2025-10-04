@@ -1,4 +1,4 @@
-import { Client, Environment } from '@square/square';
+import { Client, Environment } from 'square';
 const client = new Client({
   accessToken: process.env.SQUARE_ACCESS_TOKEN,
   environment: process.env.SQUARE_ENV === 'production' ? Environment.Production : Environment.Sandbox
