@@ -3,13 +3,15 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import { connectDB } from './db.js';
-import authRoutes from './auth/auth.routes';
+
+// ⚠️ 👇 Make sure every route import includes `.js` if using ESM after build!
+import authRoutes from './auth/auth.routes.js';
 import storeRoutes from './routes/store.routes.js';
-import itemRoutes from './routes/item.routes';
-import inventoryRoutes from './routes/inventory.routes';
-import salesRoutes from './routes/sales.routes';
-import employeeRoutes from './routes/employee.routes';
-import squareRoutes from './routes/square.routes';
+import itemRoutes from './routes/item.routes.js';
+import inventoryRoutes from './routes/inventory.routes.js';
+import salesRoutes from './routes/sales.routes.js';
+import employeeRoutes from './routes/employee.routes.js';
+import squareRoutes from './routes/square.routes.js';
 
 const app = express();
 
@@ -39,7 +41,7 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// 📦 API Routes
+// 📦 API Routes (✅ put auth first — not required but best practice)
 app.use('/api/auth', authRoutes);
 app.use('/api/stores', storeRoutes);
 app.use('/api/items', itemRoutes);

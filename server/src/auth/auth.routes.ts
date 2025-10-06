@@ -1,7 +1,8 @@
 import { Router, Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Employee from "../models/Employee.js";
+import { jwtConfig, bcryptConfig, validateAuthConfig } from "./config.js";
 
 const router = Router();
 
@@ -26,7 +27,7 @@ router.post("/register", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Employee with this email already exists." });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, bcryptConfig.saltRounds);
     const employee = await Employee.create({
       name,
       email,
@@ -75,11 +76,14 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Invalid credentials." });
     }
 
-    // ✅ Ensure JWT secret is defined
-    const jwtSecret = process.env.JWT_SECRET ?? "";
-    if (!jwtSecret) {
-      console.error("❌ JWT_SECRET is missing from environment variables.");
-      return res.status(500).json({ error: "Server misconfiguration." });
+    // ✅ Ensure JWT config is valid
+    validateAuthConfig();
+    const jwtSecret: Secret = jwtConfig.secret;
+
+    // ✅ Safer handling for expiresIn typing
+    const signOptions: SignOptions = {};
+    if (jwtConfig.expiresIn) {
+      signOptions.expiresIn = jwtConfig.expiresIn as jwt.SignOptions["expiresIn"];
     }
 
     const token = jwt.sign(
@@ -89,7 +93,7 @@ router.post("/login", async (req: Request, res: Response) => {
         role: employee.role,
       },
       jwtSecret,
-      { expiresIn: "8h" }
+      signOptions
     );
 
     return res.json({
@@ -118,11 +122,8 @@ router.get("/verify", async (req: Request, res: Response) => {
     return res.status(401).json({ valid: false, error: "No token provided" });
   }
 
-  const jwtSecret = process.env.JWT_SECRET ?? "";
-  if (!jwtSecret) {
-    console.error("❌ JWT_SECRET is missing from environment variables.");
-    return res.status(500).json({ error: "Server misconfiguration." });
-  }
+  validateAuthConfig();
+  const jwtSecret: Secret = jwtConfig.secret;
 
   try {
     const decoded = jwt.verify(token, jwtSecret);
