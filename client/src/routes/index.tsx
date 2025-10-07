@@ -1,26 +1,26 @@
-// src/routes/index.tsx
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Outlet } from "react-router-dom";
+import Nav from "../components/Nav";
 import Home from "../pages/Home";
 import Dashboard from "../pages/Dashboard";
 import NotFound from "../pages/NotFound";
 
-/**
- * 🧭 Central Router Configuration
- * Add your page routes here — each one maps a path to a React component.
- */
+function RootLayout() {
+  return (
+    <div>
+      <Nav />
+      <Outlet />
+    </div>
+  );
+}
+
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Home />,
-  },
-  {
-    path: "/dashboard",
-    element: <Dashboard />,
-  },
-  {
-    path: "*",
-    element: <NotFound />,
+    element: <RootLayout />,
+    children: [
+      { index: true, element: <Home /> },
+      { path: "dashboard", element: <Dashboard /> },
+      { path: "*", element: <NotFound /> },
+    ],
   },
 ]);
-
-export default router;
