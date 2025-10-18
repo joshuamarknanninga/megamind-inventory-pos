@@ -1,8 +1,9 @@
-import { Link, NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 
 export default function Nav() {
-  const link = (to: string, label: string) => (
+  const link = (to, label) => (
     <NavLink
+      key={to}
       to={to}
       className={({ isActive }) =>
         `px-3 py-2 rounded ${
@@ -28,3 +29,4 @@ export default function Nav() {
     </nav>
   );
 }
+
