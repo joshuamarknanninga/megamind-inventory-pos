@@ -1,9 +1,9 @@
-import { Schema, model, Types } from 'mongoose';
-const InventorySchema = new Schema({
-  storeId: { type: Schema.Types.ObjectId, ref: 'Store', required: true },
-  itemId:  { type: Schema.Types.ObjectId, ref: 'Item', required: true },
-  qty:     { type: Number, default: 0 }
-}, { timestamps: true });
-InventorySchema.index({ storeId: 1, itemId: 1 }, { unique: true });
+import mongoose from "mongoose";
 
-export default model('Inventory', InventorySchema);
+const inventorySchema = new mongoose.Schema({
+  storeId: { type: mongoose.Schema.Types.ObjectId, ref: "Store", required: true },
+  itemId: { type: mongoose.Schema.Types.ObjectId, ref: "Item", required: true },
+  qty: { type: Number, default: 0 },
+});
+
+export const Inventory = mongoose.model("Inventory", inventorySchema);

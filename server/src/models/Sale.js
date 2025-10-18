@@ -4,7 +4,6 @@ const saleSchema = new mongoose.Schema({
   storeId: { type: mongoose.Schema.Types.ObjectId, ref: "Store", required: true },
   items: [
     {
-      itemId: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
       name: String,
       price: Number,
       qty: Number,
@@ -14,4 +13,3 @@ const saleSchema = new mongoose.Schema({
 });
 
 export const Sale = mongoose.model("Sale", saleSchema);
-
