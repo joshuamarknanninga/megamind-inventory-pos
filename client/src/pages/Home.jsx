@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from 'react-router-dom';
 import { useApp } from '../lib/store';
 import StorePicker from '../components/StorePicker';

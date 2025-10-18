@@ -1,7 +1,11 @@
+import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Nav from "./components/Nav";
 import Home from "./pages/Home";
 import Inventory from "./pages/Inventory";
+import Employees from "./pages/Employees";
+import Sales from "./pages/Sales";
+
 import Pos from "./pages/Pos";
 
 export default function App() {
@@ -13,6 +17,8 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/pos" element={<Pos />} />
+          <Route path="/employees" element={<Employees />} />
+          <Route path="/sales" element={<Sales />} />
         </Routes>
       </main>
     </div>

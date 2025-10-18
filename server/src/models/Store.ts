@@ -1,10 +1,7 @@
-import { Schema, model, Types } from 'mongoose';
-const StoreSchema = new Schema({
-  name: { type: String, required: true },
-  code: { type: String, required: true, unique: true } // e.g. ST01
-}, { timestamps: true });
+import mongoose from "mongoose";
 
-export type StoreDoc = {
-  _id: Types.ObjectId; name: string; code: string;
-}
-export default model('Store', StoreSchema);
+const storeSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+});
+
+export const Store = mongoose.model("Store", storeSchema);

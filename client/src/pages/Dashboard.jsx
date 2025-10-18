@@ -1,3 +1,4 @@
+import React from "react";
 import StorePicker from '../components/StorePicker';
 
 export default function Dashboard(){
