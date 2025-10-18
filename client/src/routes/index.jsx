@@ -7,7 +7,7 @@ import NotFound from "../pages/NotFound";
 function RootLayout() {
   return (
     <div>
-      <Nav />
+      <Nav /> {/* ✅ Nav is now INSIDE router context */}
       <Outlet />
     </div>
   );
