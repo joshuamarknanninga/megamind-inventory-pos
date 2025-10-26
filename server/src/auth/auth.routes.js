@@ -1,68 +1,40 @@
-import express from "express";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { Employee } from "../models/Employee.js";
-import { config } from "../config.js";
+// server/src/auth/auth.routes.js
+import { Router } from 'express';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import Employee from '../models/Employee.js'; // ensure this exists
 
-const router = express.Router();
+const router = Router();
 
-/**
- * Signup route — create a new employee
- */
-router.post("/signup", async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password required" });
-    }
-
-    const existing = await Employee.findOne({ email });
-    if (existing) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    const hashed = await bcrypt.hash(password, 10);
-    const employee = await Employee.create({ name, email, password: hashed });
-
-    const token = jwt.sign({ id: employee._id, email }, config.jwtSecret, {
-      expiresIn: "7d",
-    });
-
-    res.json({ token, employee });
-  } catch (err) {
-    console.error("Signup error:", err);
-    res.status(500).json({ message: "Server error during signup" });
-  }
-});
-
-/**
- * Login route — validate credentials and return JWT
- */
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
+    if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
 
     const employee = await Employee.findOne({ email });
-    if (!employee) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
+    if (!employee) return res.status(401).json({ error: 'Invalid credentials.' });
 
-    const valid = await bcrypt.compare(password, employee.password);
-    if (!valid) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
+    const ok = await bcrypt.compare(password, employee.passwordHash || '');
+    if (!ok) return res.status(401).json({ error: 'Invalid credentials.' });
 
-    const token = jwt.sign({ id: employee._id, email }, config.jwtSecret, {
-      expiresIn: "7d",
+    const secret = process.env.JWT_SECRET;
+    if (!secret) return res.status(500).json({ error: 'Server misconfiguration (JWT secret)' });
+
+    const token = jwt.sign(
+      { id: employee._id.toString(), email: employee.email, role: employee.role },
+      secret,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
+    );
+
+    res.json({
+      message: '✅ Login successful',
+      token,
+      user: { id: employee._id, name: employee.name, email: employee.email, role: employee.role },
     });
-
-    res.json({ token, employee });
-  } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ message: "Server error during login" });
+  } catch (e) {
+    console.error('Login error:', e);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 export default router;
-

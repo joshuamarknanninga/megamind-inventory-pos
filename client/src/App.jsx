@@ -3,7 +3,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Nav from "./components/Nav";
 import Home from "./pages/Home";
 import Inventory from "./pages/Inventory";
-import Pos from "./pages/Pos";
+import Pos from "./pages/POS";
 import Employees from "./pages/Employees";
 import Sales from "./pages/Sales";
 import Login from "./pages/Login";

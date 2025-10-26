@@ -1,13 +1,21 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017/megamind";
-
-export const connectDB = async (): Promise<void> => {
-  try {
-    await mongoose.connect(mongoUri);
-    console.log("✅ Connected to MongoDB:", mongoUri);
-  } catch (err) {
-    console.error("❌ MongoDB connection error:", err);
-    process.exit(1); // Exit the process if DB connection fails
+export async function connectDB() {
+  const uri = process.env.MONGO_URI;
+  if (!uri) {
+    console.error('❌ MONGO_URI is missing');
+    process.exit(1);
   }
-};
+
+  // Optional: quick redacted log to confirm what host/db we’re hitting
+  try {
+    await mongoose.connect(uri, {
+      // modern drivers generally don't need extra flags
+      // leave options empty unless you have a reason
+    });
+    console.log('✅ MongoDB connected');
+  } catch (err) {
+    console.error('❌ Failed to connect to database:', err);
+    throw err;
+  }
+}

@@ -1,8 +1,16 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const employeeSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  hiredAt: { type: Date, default: Date.now },
-});
+const employeeSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true, index: true },
+    passwordHash: { type: String, required: true },
+    role: { type: String, enum: ['cashier', 'manager', 'admin'], default: 'cashier' },
+  },
+  { timestamps: true }
+);
 
-export const Employee = mongoose.model("Employee", employeeSchema);
+// Avoid model overwrite in dev watch
+const Employee = mongoose.models.Employee || mongoose.model('Employee', employeeSchema);
+
+export default Employee;
